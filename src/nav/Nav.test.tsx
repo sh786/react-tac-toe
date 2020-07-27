@@ -16,12 +16,12 @@ test('renders nav with "with TypeScript"', () => {
 
 test('renders nav with a player "X"', () => {
   const { getByText } = render(<Nav />);
-  const name = getByText('X');
+  const name = getByText('A');
   expect(name).toBeInTheDocument();
 });
 
 test('renders nav with a player "O"', () => {
   const { getByText } = render(<Nav />);
-  const name = getByText('O');
+  const name = getByText('B');
   expect(name).toBeInTheDocument();
 });

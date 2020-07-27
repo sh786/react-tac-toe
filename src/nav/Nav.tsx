@@ -8,11 +8,11 @@ const Nav: React.FC = () => {
         <span className='text-xs'>with TypeScript</span>
       </div>
       <div className='grid grid-cols-2 divide-x divide-gray-800 ml-auto items-center px-5'>
-        <div className='px-5 flex flex-col items-end'>
+        <div className='pr-5 flex flex-col items-end'>
           <span className='text-xs'>Player <span className='font-bold'>X</span></span>
           <span className='text-3xl'>3</span>
         </div>
-        <div className='px-5 flex flex-col'>
+        <div className='pl-5 flex flex-col'>
           <span className='text-xs'>Player <span className='font-bold'>O</span></span>
           <span className='text-3xl'>5</span>
         </div>

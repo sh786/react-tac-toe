@@ -14,14 +14,14 @@ test('renders nav with "with TypeScript"', () => {
   expect(name).toBeInTheDocument();
 });
 
-test('renders nav with "Player X', () => {
+test('renders nav with a player "X"', () => {
   const { getByText } = render(<Nav />);
-  const name = getByText('Player X');
+  const name = getByText('X');
   expect(name).toBeInTheDocument();
 });
 
-test('renders nav with "Player 0', () => {
-  const { getBy } = render(<Nav />);
-  const name = getByText('Player O');
+test('renders nav with a player "O"', () => {
+  const { getByText } = render(<Nav />);
+  const name = getByText('O');
   expect(name).toBeInTheDocument();
 });

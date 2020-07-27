@@ -1,2 +1,4 @@
-# react-tac-toe
-Tic-tac-toe game built with React and TypeScript.
+# React-Tac-Toe
+
+## Getting Started
+1. Run:  ```yarn start``` or ```npm run start```

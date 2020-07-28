@@ -1,13 +1,31 @@
 import React, { useEffect } from 'react';
-import { useRecoilState, useRecoilValue } from 'recoil';
-import Confetti from 'react-confetti'
+import { useRecoilState } from 'recoil';
 
-import { ReactComponent as TrophyIcon } from '../assets/zondicons/trophy.svg';
-import { gameboardState, turnState, gameStatusState, scoreState } from '../recoil';
+import { PlayerInfo, GameboardCell, GameOverPopup } from './components';
+import { gameboardState, gameStatusState, scoreState } from '../recoil';
 
 const Gameboard = () => {
-  const gameboard = useRecoilValue(gameboardState);
+  const [gameboard, setGameboard] = useRecoilState(gameboardState);
   const [gameStatus, setGameStatus] = useRecoilState(gameStatusState);
+  const [score, setScore] = useRecoilState(scoreState);
+
+  useEffect(() => {
+    // check for a game win
+    const status = getGameStatus(gameboard);
+    if (status.status !== 'IN_PROGRESS') {
+      if (status.winner === 'X') {
+        setScore({ ...score, x: score.x + 1 });
+      } else if (status.winner === 'O') {
+        setScore({ ...score, o: score.o + 1 });
+      }
+      setGameStatus(status);
+      setGameboard([
+        ['', '', ''],
+        ['', '', ''],
+        ['', '', ''],
+      ]);
+    }
+  }, [gameboard, score, setGameboard, setGameStatus, setScore])
 
   const resetGame = () => {
     setGameStatus({
@@ -38,109 +56,10 @@ const Gameboard = () => {
   );
 };
 
-const GameOverPopup: React.FC<GOPProps> = ({ message, resetGame }) => {
-  return (
-    <div className='absolute w-full h-full flex-1 bg-gray-800 bg-opacity-50 top-0 left-0 flex items-center justify-center cursor-pointer' onClick={resetGame}>
-      <div className='flex flex-col items-center justify-center bg-teal-200 p-64 rounded-lg shadow-lg cursor-default' onClick={e => e.stopPropagation()}>
-        <Confetti gravity={1.8} tweenDuration={5000} recycle={false} />
-        <TrophyIcon width={114} height={114} className='fill-current text-yellow-600' />
-        <span className='text-2xl text-gray-800 mt-5'>{message}</span>
-      </div>
-    </div>
-  );
-};
-
-type GOPProps = {
-  message: string,
-  resetGame: () => void
-};
-
-const PlayerInfo: React.FC<PIProps> = ({ label }) => {
-  const turn = useRecoilValue(turnState);
-
-  return (
-    <div className='flex flex-col items-center justify-center'>
-      <span className={`${turn === label ? 'bg-pink-500' : 'bg-gray-800'} rounded-full w-20 h-20 flex items-center justify-center text-gray-100 text-3xl font-semibold`}>{label}</span>
-      <span className={`mt-5 font-semibold ${turn === label ? 'text-pink-500' : 'text-gray-800'} h-5`}>Player {label}</span>
-      <span className='mt-5 font-semibold text-pink-500 h-5'>{turn === label && 'Your turn!'}</span>
-    </div>
-  );
-};
-
-type PIProps = {
-  label: string
-};
-
-const GameboardCell: React.FC<GCProps> = ({ i, j, value }) => {
-  const [gameboard, setGameboard] = useRecoilState(gameboardState);
-  const [turn, setTurn] = useRecoilState(turnState);
-  const [gameStatus, setGameStatus] = useRecoilState(gameStatusState);
-  const [score, setScore] = useRecoilState(scoreState);
-
-  const handleCellClick = () => {
-    // update board with X or O depending on turn
-    if (!value) {
-      const updatedGameboard: string[][] = [...gameboard];
-      const updatedRow: string[] = [...gameboard[i]];
-      updatedRow[j] = turn;
-      updatedGameboard[i] = updatedRow;
-      setGameboard(updatedGameboard);
-      setTurn(turn === 'X' ? 'O' : 'X');
-    }
-  };
-
-  useEffect(() => {
-    // check for a game win
-    const status = getGameStatus(gameboard);
-    if (status.status !== 'IN_PROGRESS') {
-      if (status.winner === 'X') {
-        setScore({ ...score, x: score.x + 1 });
-      } else if (status.winner === 'O') {
-        setScore({ ...score, o: score.o + 1 });
-      }
-      setGameStatus(status);
-      setGameboard([
-        ['', '', ''],
-        ['', '', ''],
-        ['', '', ''],
-      ]);
-    }
-  }, [gameboard, score, setGameboard, setGameStatus, setScore])
-
-  return (
-    <div className={`flex items-center justify-center text-6xl text-gray-100 ${value === '' ? 'cursor-pointer hover:bg-gray-700' : 'cursor-default'} ${getBorderStyles(i, j)}`}
-      onClick={handleCellClick}
-      onKeyDown={handleCellClick}
-      role='button'
-      tabIndex={0}
-    >
-      {value}
-    </div>
-  );
-};
-
-type GCProps = {
-  i: number,
-  j: number,
-  value: string
-};
-
-const getBorderStyles = (i: number, j: number) => {
-  let outputClasses = '';
-  if (i < 2) {
-    if (j < 2) {
-      outputClasses += 'border-b border-r border-teal-200';
-    } else {
-      outputClasses += 'border-b border-teal-200';
-    }
-  } else {
-    if (j < 2) {
-      outputClasses += 'border-r border-teal-200';
-    }
-  }
-
-  return outputClasses;
-};
+export type GameStatus = {
+  status: string,
+  winner: string
+}
 
 const getGameStatus = (gameboard: string[][]) => {
   let isBoardFull = true;
@@ -196,11 +115,6 @@ const getGameStatus = (gameboard: string[][]) => {
   // otherwise, return draw
   return drawStatus;
 };
-
-export type GameStatus = {
-  status: string,
-  winner: string
-}
 
 const valueToPointMap = new Map([['X', 1], ['O', -1]]);
 

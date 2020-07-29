@@ -1,21 +1,35 @@
-import React from 'react'
-import { useRecoilState } from 'recoil';
+import React, { useEffect } from 'react'
+import { useApolloClient, useLazyQuery } from '@apollo/client';
 
-import { gameboardState, turnState } from '../../recoil';
+import { GAMEBOARD, TURN, setGameboard, setTurn } from '../../apolloMockServer';
 
 const GameboardCell: React.FC<GCProps> = ({ i, j, value }) => {
-  const [gameboard, setGameboard] = useRecoilState(gameboardState);
-  const [turn, setTurn] = useRecoilState(turnState);
+  const client = useApolloClient();
+
+  const [getGameboard, { data: gameboard }] = useLazyQuery(GAMEBOARD);
+  const [getTurn, { data: turn }] = useLazyQuery(TURN);
+
+  useEffect(() => {
+    let isMounted = true;
+    if (isMounted) {
+      getGameboard();
+      getTurn();
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [getGameboard, getTurn])
 
   const handleCellClick = () => {
     // update board with X or O depending on turn
     if (!value) {
-      const updatedGameboard: string[][] = [...gameboard];
-      const updatedRow: string[] = [...gameboard[i]];
-      updatedRow[j] = turn;
+      const updatedGameboard: string[][] = [...gameboard.data];
+      const updatedRow: string[] = [...updatedGameboard[i]];
+      updatedRow[j] = turn.turn;
       updatedGameboard[i] = updatedRow;
-      setGameboard(updatedGameboard);
-      setTurn(turn === 'X' ? 'O' : 'X');
+      setGameboard(client, updatedGameboard);
+      setTurn(client, turn.turn === 'X' ? 'O' : 'X');
     }
   };
 

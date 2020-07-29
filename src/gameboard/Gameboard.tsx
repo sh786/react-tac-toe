@@ -1,34 +1,38 @@
 import React, { useEffect } from 'react';
-import { useRecoilState } from 'recoil';
+import { useApolloClient, useQuery } from '@apollo/client';
 
+import { SCORES, GAMEBOARD, GAME_STATUS, setScores, setGameboard, setGameStatus } from '../apolloMockServer';
 import { PlayerInfo, GameboardCell, GameOverPopup } from './components';
-import { gameboardState, gameStatusState, scoreState } from '../recoil';
 
 const Gameboard = () => {
-  const [gameboard, setGameboard] = useRecoilState(gameboardState);
-  const [gameStatus, setGameStatus] = useRecoilState(gameStatusState);
-  const [score, setScore] = useRecoilState(scoreState);
+  const client = useApolloClient();
+
+  const { data: scores } = useQuery(SCORES);
+  const { data: gameboard } = useQuery(GAMEBOARD);
+  const { data: gameStatus } = useQuery(GAME_STATUS);
 
   useEffect(() => {
     // check for a game win
-    const status = getGameStatus(gameboard);
+    const status = getGameStatus(gameboard.data);
     if (status.status !== 'IN_PROGRESS') {
-      if (status.winner === 'X') {
-        setScore({ ...score, x: score.x + 1 });
-      } else if (status.winner === 'O') {
-        setScore({ ...score, o: score.o + 1 });
-      }
-      setGameStatus(status);
-      setGameboard([
+      setGameboard(client, [
         ['', '', ''],
         ['', '', ''],
         ['', '', ''],
       ]);
+      if (status.winner === 'X') {
+        // call apollo mock api to update scores state
+        setScores(client, { ...scores, x: Number(scores.x) + 1 });
+      } else if (status.winner === 'O') {
+        // call apollo mock api to update scores state
+        setScores(client, { ...scores, o: Number(scores.o) + 1 });
+      }
+      setGameStatus(client, status);
     }
-  }, [gameboard, score, setGameboard, setGameStatus, setScore])
+  }, [scores, gameboard.data, client])
 
   const resetGame = () => {
-    setGameStatus({
+    setGameStatus(client, {
       status: 'IN_PROGRESS',
       winner: ''
     });
@@ -42,15 +46,18 @@ const Gameboard = () => {
           <PlayerInfo label='O' />
         </div>
         <div className='flex-1 mx-2 my-2 sm:m-5 sm:ml-0 p-3 bg-gray-800 rounded-lg shadow-lg grid grid-cols-3 grid-rows-3'>
-          {gameboard.map((row, i) => {
+          {gameboard.data.map((row: string[], i: number) => {
             return row.map((value, j) => {
               return <GameboardCell key={value + i.toString() + j.toString()} i={i} j={j} value={value} />;
             });
           })}
         </div>
       </div>
-      {gameStatus.status === 'WON' && (
-        <GameOverPopup message={`Player ${gameStatus.winner} Wins!`} resetGame={resetGame} />
+      {gameStatus.status.status === 'WON' && (
+        <GameOverPopup message={`Player ${gameStatus.status.winner} Wins!`} resetGame={resetGame} />
+      )}
+      {gameStatus.status.status === 'DRAW' && (
+        <GameOverPopup message='Player X and Player O have tied!' resetGame={resetGame} />
       )}
     </>
   );

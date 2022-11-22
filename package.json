@@ -16,7 +16,7 @@
     "react": "^16.13.1",
     "react-confetti": "^6.0.0",
     "react-dom": "^16.13.1",
-    "react-scripts": "3.4.1",
+    "react-scripts": "5.0.1",
     "recoil": "^0.0.10",
     "tailwindcss": "^1.5.2",
     "typescript": "~3.7.2"
